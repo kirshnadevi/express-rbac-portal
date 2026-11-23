@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Role-Based Access Portal — Express</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #ecfeff 100%);
+      --card-bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-soft: #eef2ff;
+      --danger: #e11d48;
+      --danger-hover: #be123c;
+      --success-bg: #ecfdf5;
+      --success-text: #065f46;
+      --success-border: #a7f3d0;
+      --error-bg: #fff1f2;
+      --error-text: #9f1239;
+      --error-border: #fecdd3;
+      --shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.12), 0 4px 12px -4px rgba(15, 23, 42, 0.05);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 28px 16px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 860px;
+      background: var(--card-bg);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+    }
+
+    .auth-wrapper {
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-tag {
+      display: inline-block;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .brand h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: var(--surface);
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 22px;
+    }
+
+    .tabs button {
+      border: none;
+      background: transparent;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .tabs button.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--text-main);
+      background: #fff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-sm {
+      width: auto;
+      padding: 7px 12px;
+      font-size: 12.5px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-soft {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .btn-soft:hover {
+      background: #e0e7ff;
+    }
+
+    .btn-del {
+      background: #fff1f2;
+      color: var(--danger);
+      border: 1px solid #fecdd3;
+    }
+
+    .btn-del:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-logout {
+      background: #fff;
+      color: var(--danger);
+      border: 1px solid #fecdd3;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-logout:hover {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    .msg {
+      margin-top: 14px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+
+    .msg.err {
+      background: var(--error-bg);
+      color: var(--error-text);
+      border-color: var(--error-border);
+    }
+
+    .msg.ok {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .portal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+    }
+
+    .portal-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .portal-title-row h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .role-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .role-admin {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .role-user {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .meta-text {
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .panel h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .stat-pill {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .task-list {
+      margin: 0 0 16px;
+      padding-left: 20px;
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .profile-grid .field {
+      margin-bottom: 0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 680px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+      .shell {
+        padding: 22px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- Auth View -->
+    <div id="authSection" class="auth-wrapper">
+      <div class="brand">
+        <span class="brand-tag">Express RBAC</span>
+        <h1>Access Portal</h1>
+        <p>Sign up or sign in to continue to your workspace</p>
+      </div>
+
+      <div class="tabs">
+        <button id="tabSignup" type="button" class="active" onclick="switchTab('signup')">Sign Up</button>
+        <button id="tabLogin" type="button" class="active-none" onclick="switchTab('login')">Login</button>
+      </div>
+
+      <form id="authForm">
+        <div class="field" id="nameRow">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" placeholder="Enter your full name" />
+        </div>
+
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="At least 6 characters" required />
+        </div>
+
+        <div class="field" id="roleRow">
+          <label for="role">Role</label>
+          <select id="role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">Create Account</button>
+      </form>
+
+      <div id="message" class="msg hidden"></div>
+    </div>
+
+    <!-- Portals View -->
+    <div id="portalSection" class="hidden">
+      <div class="portal-header">
+        <div>
+          <div class="portal-title-row">
+            <h2 id="welcomeHeading">Workspace Portal</h2>
+            <span id="roleBadge" class="role-badge"></span>
+          </div>
+          <div id="userInfo" class="meta-text"></div>
+        </div>
+        <button type="button" class="btn-logout" onclick="logout()">Sign Out</button>
+      </div>
+
+      <div id="portalMessage" class="msg hidden" style="margin-top: 0; margin-bottom: 18px;"></div>
+
+      <!-- User Portal & Profile Editor -->
+      <div id="userPortal" class="panel hidden">
+        <div class="panel-header">
+          <h3>User Portal & Profile</h3>
+          <span class="stat-pill">Authenticated Session</span>
+        </div>
+        <ul id="userList" class="task-list"></ul>
+
+        <form id="profileForm" class="profile-grid">
+          <div class="field">
+            <label for="profileName">Update Name</label>
+            <input type="text" id="profileName" required />
+          </div>
+          <div class="field">
+            <label for="profileEmail">Update Email</label>
+            <input type="email" id="profileEmail" required />
+          </div>
+          <button type="submit" class="btn-primary btn-sm" style="padding: 11px 16px;">Save Profile</button>
+        </form>
+      </div>
+
+      <!-- Admin Portal -->
+      <div id="adminPortal" class="panel hidden">
+        <div class="panel-header">
+          <h3>Admin Portal — User Management</h3>
+          <span id="adminCountBadge" class="stat-pill">0 Users</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mode = 'signup';
+
+    function switchTab(newMode) {
+      mode = newMode;
+      const isSignup = mode === 'signup';
+      document.getElementById('tabSignup').classList.toggle('active', isSignup);
+      document.getElementById('tabLogin').classList.toggle('active', !isSignup);
+      document.getElementById('nameRow').classList.toggle('hidden', !isSignup);
+      document.getElementById('roleRow').classList.toggle('hidden', !isSignup);
+      document.getElementById('submitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
+      hideMsg('message');
+    }
+
+    function showMsg(targetId, text, isError = false) {
+      const el = document.getElementById(targetId);
+      el.textContent = text;
+      el.className = `msg ${isError ? 'err' : 'ok'}`;
+      el.classList.remove('hidden');
+    }
+
+    function hideMsg(targetId) {
+      const el = document.getElementById(targetId);
+      el.textContent = '';
+      el.className = 'msg hidden';
+    }
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMsg('message');
+
+      const url = mode === 'signup' ? '/api/signup' : '/api/login';
+      const body =
+        mode === 'signup'
+          ? {
+              name: document.getElementById('name').value,
+              email: document.getElementById('email').value,
+              password: document.getElementById('password').value,
+              role: document.getElementById('role').value
+            }
+          : {
+              email: document.getElementById('email').value,
+              password: document.getElementById('password').value
+            };
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          showMsg('message', data.message || 'Authentication failed.', true);
+          return;
+        }
+
+        localStorage.setItem('token', data.token);
+        showMsg('message', data.message, false);
+        setTimeout(() => {
+          hideMsg('message');
+          loadPortals(data.token);
+        }, 200);
+      } catch {
+        showMsg('message', 'Unable to reach the server. Please check if it is running.', true);
+      }
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      if (!token) return logout();
+
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: document.getElementById('profileName').value,
+          email: document.getElementById('profileEmail').value
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showMsg('portalMessage', data.message || 'Failed to update profile.', true);
+        return;
+      }
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      showMsg('portalMessage', data.message, false);
+      await loadPortals(localStorage.getItem('token'));
+    });
+
+    async function loadPortals(token) {
+      const res = await fetch('/api/user/dashboard', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return logout();
+
+      const data = await res.json();
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('portalSection').classList.remove('hidden');
+
+      const role = data.user.role;
+      document.getElementById('welcomeHeading').textContent =
+        role === 'admin' ? 'Admin Portal' : 'User Portal';
+      document.getElementById('userInfo').textContent =
+        `${data.user.name} · ${data.user.email}`;
+
+      const badge = document.getElementById('roleBadge');
+      badge.textContent = role;
+      badge.className = `role-badge ${role === 'admin' ? 'role-admin' : 'role-user'}`;
+
+      document.getElementById('userPortal').classList.remove('hidden');
+      document.getElementById('userList').innerHTML = data.items
+        .map((item) => `<li>${item}</li>`)
+        .join('');
+
+      document.getElementById('profileName').value = data.user.name;
+      document.getElementById('profileEmail').value = data.user.email;
+
+      if (role === 'admin') {
+        document.getElementById('adminPortal').classList.remove('hidden');
+        await loadAdminUsers(token, data.user.id);
+      } else {
+        document.getElementById('adminPortal').classList.add('hidden');
+      }
+    }
+
+    async function loadAdminUsers(token, currentUserId) {
+      const adminRes = await fetch('/api/admin/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!adminRes.ok) return;
+
+      const adminData = await adminRes.json();
+      document.getElementById('adminCountBadge').textContent =
+        `${adminData.totalUsers} ${adminData.totalUsers === 1 ? 'User' : 'Users'}`;
+
+      document.getElementById('adminUsersBody').innerHTML = adminData.users
+        .map((u) => {
+          const nextRole = u.role === 'admin' ? 'user' : 'admin';
+          const isSelf = u.id === currentUserId;
+          return `
+            <tr>
+              <td>#${u.id}</td>
+              <td><strong>${u.name}</strong></td>
+              <td>${u.email}</td>
+              <td><span class="role-badge ${u.role === 'admin' ? 'role-admin' : 'role-user'}">${u.role}</span></td>
+              <td>
+                <div class="actions-cell">
+                  <button type="button" class="btn-sm btn-soft" onclick="changeRole(${u.id}, '${nextRole}')">
+                    Set ${nextRole}
+                  </button>
+                  ${
+                    isSelf
+                      ? ''
+                      : `<button type="button" class="btn-sm btn-del" onclick="deleteUser(${u.id})">Delete</button>`
+                  }
+                </div>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+    }
+
+    async function changeRole(id, nextRole) {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: nextRole })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showMsg('portalMessage', data.message || 'Could not update role.', true);
+        return;
+      }
+
+      showMsg('portalMessage', data.message, false);
+      await loadPortals(token);
+    }
+
+    async function deleteUser(id) {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showMsg('portalMessage', data.message || 'Could not delete user.', true);
+        return;
+      }
+
+      showMsg('portalMessage', data.message, false);
+      await loadPortals(token);
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      document.getElementById('portalSection').classList.add('hidden');
+      document.getElementById('authSection').classList.remove('hidden');
+      document.getElementById('authForm').reset();
+      hideMsg('message');
+      hideMsg('portalMessage');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('token');
+      if (saved) loadPortals(saved);
+    });
+  </script>
+</body>
+</html>
